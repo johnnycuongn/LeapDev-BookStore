@@ -12,10 +12,11 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import { Book } from "@/types/book";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currencies";
 import { normalizeIsbn, validateIsbn } from "@/lib/isbn";
+import StarRating, { roundToHalf } from "./StarRating";
 
 export type BookFormValues = Omit<Book, "id">;
 
@@ -66,6 +67,8 @@ export default function BookForm({ id, book, onSubmit }: BookFormProps) {
   const [stock, setStock] = useState<number>(book?.stock ?? 0);
   const [coverImage, setCoverImage] = useState(book?.coverImage ?? "");
   const [description, setDescription] = useState(book?.description ?? "");
+  const [rating, setRating] = useState(book?.rating ?? 0);
+  const ratingLabelId = useId();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     // Only reached when every field passed validation.
@@ -86,7 +89,7 @@ export default function BookForm({ id, book, onSubmit }: BookFormProps) {
       stock,
       coverImage: coverImage.trim(),
       description: description.trim(),
-      rating: book?.rating ?? 0,
+      rating,
     });
   };
 
@@ -241,6 +244,18 @@ export default function BookForm({ id, book, onSubmit }: BookFormProps) {
         </NumberField.Group>
         <FieldError />
       </NumberField>
+
+      <div className="flex flex-col gap-1 sm:col-span-2">
+        <Label id={ratingLabelId} elementType="span">
+          Your rating
+        </Label>
+        <div className="flex items-center gap-3">
+          <StarRating value={rating} onChange={setRating} aria-labelledby={ratingLabelId} size="lg" />
+          <span className="text-sm text-muted" aria-hidden>
+            {rating > 0 ? `${roundToHalf(rating)} / 5` : "Not rated"}
+          </span>
+        </div>
+      </div>
 
       <TextField name="genres" value={genres} onChange={setGenres} className="sm:col-span-2" fullWidth>
         <Label>Genres</Label>

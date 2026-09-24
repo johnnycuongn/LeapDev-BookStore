@@ -97,3 +97,46 @@ Entry template:
 9. Verified in Playwright at 1280px and 390px: theme toggle persists to `localStorage`, dropdown actions, inline validation blocks submit, currency change and edit reach the card, add appends a 21st book, no console errors.
 10. Fixed two issues found in testing: `Switch.Content` was missing (no clickable input) and `NumberField` flipped from uncontrolled to controlled (now uses `NaN` for empty).
 11. Removed the unused `page.module.css`, ignored `.playwright-mcp/`, ran `pnpm build`, and committed in small steps.
+
+## 7. 2026-09-24 15:38
+- **Model:** Claude Opus 5.5 (`claude-opus-5-5`)
+- **Effort:** high
+
+> Delete the JavaScript alert when deleting a book. Replace with a dialog using Hero UI to modernize the confirmation dialog.
+
+1. Read the cached HeroUI docs for AlertDialog and Toast.
+2. Added `DeleteBookDialog`, a HeroUI `AlertDialog` with a danger icon, the book title and author, and Cancel / Delete buttons. It replaces `window.confirm()`.
+3. Mounted `<Toast.Provider />` once in `providers.tsx`. `page.tsx` now keeps a `bookToDelete` state. The card menu opens the dialog, and confirming shows a "Book deleted" success toast with an Undo action that puts the book back at its original position.
+4. Verified in Playwright that the dialog shows the right book, Delete removes it and shows the toast, and Undo restores it in place. Cancel and Escape keep the book.
+5. Fixed two issues found in testing. The toast used HeroUI's 4s default, which was too short to reach Undo, so it is now 8s. HeroUI alert dialogs ignore Escape by default, so Escape is now enabled as a safe cancel.
+6. Cleared a stale `.next` cache that broke the build and ran `pnpm build`. The user asked not to commit.
+
+## 8. 2026-09-24 16:05
+- **Model:** Opus 5.5 (1M context) (`claude-opus-5-5[1m]`)
+- **Effort:** high
+
+> continue
+
+1. Resumed prompt 7 after the model switch and finished verifying the toast, Undo, Cancel, and Escape.
+2. Applied the two fixes described in prompt 7, step 5, then rebuilt. Nothing was committed.
+
+## 9. 2026-09-24 16:03
+- **Model:** Opus 5.5 (1M context) (`claude-opus-5-5[1m]`)
+- **Effort:** high
+
+> After that, add a rating system for this book dialog where the user can rate up to 5 stars (allow for half star rating) for each book. Remove the average random star that you have as a chip. Replace it with an intuitive transparent 5-star icon where the user can directly rate by selecting and also sync with the database on top of that.
+
+## 10. 2026-09-24 16:10
+- **Model:** Opus 5.5 (1M context) (`claude-opus-5-5[1m]`)
+- **Effort:** medium
+
+> Create a searchable bar on top of the list, and this search is a quick search through the book's name, author, and isbn. There will also be a sort filter on the right of the search. This filter will allow sorting by publication date, name, rating, filter by author or genre.
+
+
+1. Found the other session's note that the user asked not to commit prompt 7. Undid the delete-dialog commit made at the start of this prompt (`git reset --soft`). The changes stay uncommitted.
+2. Checked the HeroUI skill. HeroUI v3 has no Rating component, and its `Radio` ships its own control styling. Built `StarRating` on native radio inputs instead: 10 half-star radios (two per star) in a `radiogroup`, which give arrow-key navigation, focus, and accessible names ("3.5 stars") with no new dependency.
+3. Stars are a `Star` outline with a `StarFill` clipped to 0, 50, or 100%. Hovering previews the value. Clicking the current rating, or pressing Backspace/Delete, clears it. Stored decimals such as 4.6 show at the nearest half.
+4. Replaced the numeric rating chip on `BookCard` with a translucent overlay `StarRating` on the cover. It calls a new `onRate`, and `handleRateBook` in `page.tsx` updates the book in the `books` state, the same in-memory store that edits use.
+5. Added a "Your rating" field to `BookForm`, so the book dialog shows the current rating ("4.5 / 5" or "Not rated"), can change it, and submits it instead of passing the old value through.
+6. The earlier `pnpm build` overwrote the `.next` folder that the running `pnpm dev` was using. Tested from a scratch copy on port 3100 instead. Verified in Playwright: half and full clicks, re-click to clear, arrow keys, Backspace/Delete, and hover preview. Card ratings show up in the edit dialog, dialog changes save to the card, Cancel discards them, and new books start unrated. Checked light and dark mode.
+7. `tsc --noEmit` and `next build` pass (build run in the scratch copy). Nothing committed.

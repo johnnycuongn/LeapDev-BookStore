@@ -1,22 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { Ellipsis, Pencil, StarFill, TrashBin } from "@gravity-ui/icons";
+import { Ellipsis, Pencil, TrashBin } from "@gravity-ui/icons";
 import { Button, Card, Chip, Dropdown, Label } from "@heroui/react";
 import { Book } from "@/types/book";
 import { formatPrice } from "@/lib/currencies";
+import StarRating from "./StarRating";
 
 interface BookCardProps {
   book: Book;
   onEdit: (book: Book) => void;
   onDelete: (id: number) => void;
+  onRate: (id: number, rating: number) => void;
   /** Preload the cover; set for above-the-fold cards. */
   priority?: boolean;
 }
 
 const MAX_VISIBLE_GENRES = 2;
 
-export default function BookCard({ book, onEdit, onDelete, priority = false }: BookCardProps) {
+export default function BookCard({ book, onEdit, onDelete, onRate, priority = false }: BookCardProps) {
   const visibleGenres = book.genres.slice(0, MAX_VISIBLE_GENRES);
   const hiddenGenreCount = book.genres.length - visibleGenres.length;
 
@@ -65,13 +67,13 @@ export default function BookCard({ book, onEdit, onDelete, priority = false }: B
           </Dropdown>
         </div>
 
-        <span
-          aria-label={`Rated ${book.rating} out of 5`}
-          className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-full bg-surface/85 px-2 py-0.5 text-xs font-medium text-foreground shadow-sm backdrop-blur"
-        >
-          <StarFill aria-hidden className="size-3 text-warning" />
-          {book.rating.toFixed(1)}
-        </span>
+        <StarRating
+          value={book.rating}
+          onChange={(rating) => onRate(book.id, rating)}
+          aria-label={`Rate ${book.title}`}
+          tone="overlay"
+          className="absolute bottom-2 start-2 z-10 rounded-full bg-black/25 px-1.5 py-1 backdrop-blur-sm"
+        />
       </div>
 
       <Card.Header className="gap-0.5">
