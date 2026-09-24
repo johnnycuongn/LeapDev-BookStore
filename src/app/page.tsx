@@ -15,8 +15,9 @@ export default function Page() {
   const handleAddBook = (newBook: Partial<Book>) => {
     const book: Book = {
       ...(newBook as Book),
-      id: Math.max(...books.map((b) => b.id)) + 1,
+      id: Math.max(...books.map((b) => b.id), 0) + 1,
     };
+    console.log("Adding book:", book);
     setBooks([...books, book]);
     setIsModalOpen(false);
   };
@@ -24,7 +25,7 @@ export default function Page() {
   const handleUpdateBook = (updatedBook: Partial<Book>) => {
     setBooks(
       books.map((book) =>
-        book.id === selectedBook?.id ? { ...updatedBook, ...book } : book
+        book.id === selectedBook?.id ? { ...book , ...updatedBook} : book
       )
     );
     setIsModalOpen(false);
