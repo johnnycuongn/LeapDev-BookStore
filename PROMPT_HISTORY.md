@@ -73,3 +73,27 @@ Entry template:
 1. Took timestamps from the modification times of each prompt's first output file.
 2. Put the timestamp in every entry heading and in the template.
 3. Extended the rule in `CLAUDE.md` so future entries carry a timestamp.
+
+## 6. 2026-09-24 15:32
+- **Model:** Claude Fable 5.1 (`claude-fable-5-1`)
+- **Effort:** high
+
+> Update the UI to use Hero UI, and also implement a theme switch between light mode and dark mode. Make sure to have a switcher on the top right to switch between a dark theme and a light theme.
+> - Redesign the book card to be more modern.
+> - Change the edit and delete buttons into a dropdown menu on the top right to allow the user to not only minimize the book card but also follow the modern design.
+> - Redesign the book form to be more user-friendly, using the Hero UI model.
+> - Make sure to add validation to the book form.
+> - For the currency, use a dropdown to implement the currency from all over the world.
+> - Add validation for ISBN.
+
+1. Loaded the `hero-ui` skill and read the cached v3 docs for Card, Dropdown, Modal, Form, TextField, NumberField, Select, Switch, and dark mode.
+2. Installed `@heroui/react`, `@heroui/styles`, `next-themes`, and `@gravity-ui/icons` (Corepack's pnpm shim is broken on this machine, so `npx pnpm@10` was used).
+3. Replaced `globals.css` with the two HeroUI imports, added `src/app/providers.tsx` (next-themes, class attribute, system default), and updated `layout.tsx` with `suppressHydrationWarning`, theme-aware body classes, and page metadata.
+4. Built `ThemeSwitcher` as a HeroUI `Switch` with sun/moon icons, gated on mount, and placed it in the top-right of a new sticky header next to the Add button.
+5. Added `src/lib/currencies.ts` (155 active ISO 4217 codes with names, `formatPrice`) and `src/lib/isbn.ts` (ISBN-10/13 checksum validation with friendly messages); unit-checked the validator with tsx.
+6. Redesigned `BookCard` as a HeroUI `Card`: 2:3 cover with hover zoom, rating badge, genre chips, formatted price and stock, and a top-right `Dropdown` menu with Edit and a danger-styled Delete replacing the two buttons.
+7. Rebuilt `BookForm` on HeroUI `Form` with native validation: required title/author/ISBN/price/date/pages/stock/cover/description, ISBN checksum, currency `Select` over the world list, price formatted in the chosen currency, date not in the future, cover must be a URL or root path.
+8. Replaced the hand-rolled `Modal` with `BookDialog` (HeroUI `Modal`, blur backdrop, footer submit targeting the form by id) and simplified `page.tsx` to typed `Omit<Book, "id">` submissions.
+9. Verified in Playwright at 1280px and 390px: theme toggle persists to `localStorage`, dropdown actions, inline validation blocks submit, currency change and edit reach the card, add appends a 21st book, no console errors.
+10. Fixed two issues found in testing: `Switch.Content` was missing (no clickable input) and `NumberField` flipped from uncontrolled to controlled (now uses `NaN` for empty).
+11. Removed the unused `page.module.css`, ignored `.playwright-mcp/`, ran `pnpm build`, and committed in small steps.
