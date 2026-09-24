@@ -4,6 +4,8 @@ This is a very basic Book Store with static data and simple CRUD support.
 
 Push this up to a public Github repository please. We will assess both code and commits in order to discern how you approach problem-solving.
 
+Please review PROMPT_HISTORY.md for my prompting.
+
 ---
 
 Please implement the following:
@@ -18,7 +20,11 @@ I have use Hero UI theme switcher to update.
 
 3. Deleting a book displays a JavaScript alert. Replace this with modern UX.
 
+I have replace with a confirmation dialog and succesful snackbar on sucess. This will allow users to confirm with a modern dialog instead of Javascript alert bar, prompting users with a good design and more cautious of their action.
+
 4. Add a rating system that goes up to 5 stars.
+
+I have added a rating system where user can rating directly on the Book Card, or within the Book Form. This allow users to quickly rate a book by just tapping directly on the book, as this is one of the features that users need quick interaction without going to deeper layer.
 
 5. There is a bug in the code. Find it and fix it.
 

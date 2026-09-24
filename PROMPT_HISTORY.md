@@ -126,12 +126,6 @@ Entry template:
 
 > After that, add a rating system for this book dialog where the user can rate up to 5 stars (allow for half star rating) for each book. Remove the average random star that you have as a chip. Replace it with an intuitive transparent 5-star icon where the user can directly rate by selecting and also sync with the database on top of that.
 
-## 10. 2026-09-24 16:10
-- **Model:** Opus 5.5 (1M context) (`claude-opus-5-5[1m]`)
-- **Effort:** medium
-
-> Create a searchable bar on top of the list, and this search is a quick search through the book's name, author, and isbn. There will also be a sort filter on the right of the search. This filter will allow sorting by publication date, name, rating, filter by author or genre.
-
 
 1. Found the other session's note that the user asked not to commit prompt 7. Undid the delete-dialog commit made at the start of this prompt (`git reset --soft`). The changes stay uncommitted.
 2. Checked the HeroUI skill. HeroUI v3 has no Rating component, and its `Radio` ships its own control styling. Built `StarRating` on native radio inputs instead: 10 half-star radios (two per star) in a `radiogroup`, which give arrow-key navigation, focus, and accessible names ("3.5 stars") with no new dependency.
@@ -140,3 +134,16 @@ Entry template:
 5. Added a "Your rating" field to `BookForm`, so the book dialog shows the current rating ("4.5 / 5" or "Not rated"), can change it, and submits it instead of passing the old value through.
 6. The earlier `pnpm build` overwrote the `.next` folder that the running `pnpm dev` was using. Tested from a scratch copy on port 3100 instead. Verified in Playwright: half and full clicks, re-click to clear, arrow keys, Backspace/Delete, and hover preview. Card ratings show up in the edit dialog, dialog changes save to the card, Cancel discards them, and new books start unrated. Checked light and dark mode.
 7. `tsc --noEmit` and `next build` pass (build run in the scratch copy). Nothing committed.
+
+## 10. 2026-09-24 16:10
+- **Model:** Opus 5.5 (1M context) (`claude-opus-5-5[1m]`)
+- **Effort:** medium
+
+> Create a searchable bar on top of the list, and this search is a quick search through the book's name, author, and isbn. There will also be a sort filter on the right of the search. This filter will allow sorting by publication date, name, rating, filter by author or genre.
+
+1. Read the cached HeroUI docs for SearchField and Dropdown (sections with their own selection, submenus).
+2. Added `src/lib/bookQuery.ts`, a set of pure helpers. The search matches title, author, and ISBN, ignoring case. ISBN matching ignores hyphens and spaces. Sorting covers shelf order, publication date, title, and rating in both directions. The author and genre filters, and the lists that feed them, come from the current books.
+3. Added `BookToolbar`: a full-width HeroUI `SearchField` with a "Sort & filter" `Dropdown` on its right. The menu has a single-select "Sort by" section, Author and Genre submenus, and a reset item. A badge shows how many filters are active. A status line reads "Showing X of Y books", and each active filter has a removable button.
+4. Wired the toolbar into `page.tsx` with `useMemo`. Added an empty state with a "Clear search & filters" button.
+5. Checked the helpers with tsx. Checked search, ISBN search, the empty state, sorting, the genre submenu, and clearing a filter in headless Chrome at 1280px. Also checked 390px in dark mode: no horizontal overflow and no console errors. The dev server on :3000 was serving 404 chunks because an earlier `pnpm build` had overwritten its `.next` folder, so the checks ran against a scratch copy on :3100.
+6. Ran `next build` in the scratch copy so the running dev server was not affected. Nothing was committed.
