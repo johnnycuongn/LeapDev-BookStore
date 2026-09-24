@@ -6,7 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LEAP Dev Next.js take-home test: a small Book Store with static data and in-memory CRUD. The assessment reviews both the code and the commit history, so keep commits small and descriptive. The README lists the five tasks to deliver (component library, dark mode with switcher, replace the delete `confirm()` with modern UX, 5-star rating, find and fix the planted bug) and asks for written explanations of the library choice and the bug fix in the README.
 
-Stack: Next.js 15.5 (App Router), React 19, TypeScript (strict), Tailwind CSS v4 (CSS-first config, no `tailwind.config.js`), pnpm.
+Stack: Next.js 15.5 (App Router), React 19, TypeScript (strict), Tailwind CSS v4 (CSS-first config, no `tailwind.config.js`), HeroUI v3, pnpm.
+
+## Decisions
+
+- **Component library: HeroUI v3** (`@heroui/react` + `@heroui/styles`, https://heroui.com). Chosen because it is Tailwind v4 native (no `tailwind.config.js`, tokens are CSS variables), built on React Aria so dialogs, forms, and toasts are accessible out of the box, ships CSS-driven light/dark themes that work with `next-themes`, and needs no provider. Do not add a second component library. All HeroUI usage goes through the `hero-ui` skill in `.claude/skills/hero-ui/`; v2 patterns (`HeroUIProvider`, `framer-motion`, flat props) are wrong.
+- **Dark mode** is `next-themes` writing the `dark` class on `<html>`, consumed by HeroUI's theme variables. No `@custom-variant dark` is needed once HeroUI styles are imported.
+- **Prompt history.** Every user prompt given to Claude Code in this project is appended to `PROMPT_HISTORY.md` at the repo root before the work starts. Each entry has: a numbered heading with the local timestamp (`## N. YYYY-MM-DD HH:MM`), a **Model** line (display name and model id), an **Effort** line (from `CLAUDE_EFFORT` or `~/.claude/settings.json` → `modelSettings.effortLevel`, never guessed), the prompt text verbatim as a blockquote, then the numbered steps taken (1, 2, 3 ...) filled in as the work completes. One entry per prompt, newest at the bottom. The template is at the top of that file.
 
 ## Commands
 
@@ -37,9 +43,10 @@ Data flow: `page.tsx` → callbacks down to `BookCard` / `BookForm` → state up
 - The planted bug is in `handleUpdateBook` in `src/app/page.tsx`: the merge is `{ ...updatedBook, ...book }`, so the original book overwrites every edited field and updates silently no-op. The fix is to reverse the spread order. The README asks for a written explanation of this.
 - `handleAddBook` derives the new id with `Math.max(...ids) + 1`, which returns `-Infinity` when the list is empty.
 - `src/app/page.module.css` is an unused leftover from `create-next-app` and can be removed.
-- Tailwind v4 is configured in `src/app/globals.css` via `@import "tailwindcss"` and an `@theme` block. Class-based dark mode in v4 requires `@custom-variant dark (&:where(.dark, .dark *));` in that file; it is not configured yet.
-- `BookCard` uses `bg-white` and hard-coded gray text colors, so it will need `dark:` variants or theme tokens once dark mode lands.
+- Tailwind v4 is configured in `src/app/globals.css` via `@import "tailwindcss"` and an `@theme` block. Once HeroUI is installed, that file becomes `@import "tailwindcss"; @import "@heroui/styles";` and the old `@theme` / `@layer base` blocks go away.
+- `BookCard` uses `bg-white` and hard-coded gray text colors. Replace them with HeroUI tokens (`bg-surface`, `text-muted`, `text-foreground`) so dark mode works without `dark:` pairs.
+- HeroUI v3 has no Rating component; the 5-star task is built from `RadioGroup` or `ToggleButtonGroup` with star icons.
 
 ## Rules and agents
 
-Coding conventions for Next.js 15 / React 19 / Tailwind v4 live in `.claude/rules/`. Specialised agents (`nextjs-developer`, `nextjs-code-reviewer`) live in `.claude/agents/`.
+Coding conventions for Next.js 15 / React 19 / Tailwind v4 live in `.claude/rules/`. Specialised agents (`nextjs-developer`, `nextjs-code-reviewer`) live in `.claude/agents/`. The `hero-ui` skill in `.claude/skills/hero-ui/` holds the HeroUI v3 setup, theming, styling, and cached component docs; invoke it for any UI work.

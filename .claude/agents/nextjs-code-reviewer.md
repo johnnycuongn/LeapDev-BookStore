@@ -26,8 +26,15 @@ Review the working tree diff if git is initialised (`git diff`, `git diff --cach
 - Nothing reads `window`, `localStorage`, or `matchMedia` during render. Theme is applied to `<html>` pre-hydration with `suppressHydrationWarning`.
 - `next/link` and `next/navigation` are used, not raw anchors or `next/router`.
 
+**HeroUI v3**
+- No `HeroUIProvider`, `NextUIProvider`, `framer-motion`, or `@heroui/theme` imports.
+- Compound anatomy matches `.claude/skills/hero-ui/reference/components/<name>.md`; `isOpen`/`onOpenChange` sit on `Modal.Backdrop` / `AlertDialog.Backdrop`.
+- `onPress` / `isDisabled` / `variant`, not `onClick` / `disabled` / `color`.
+- `<Toast.Provider />` mounted once if `toast()` is called anywhere.
+- Semantic variants used instead of raw colour utilities on HeroUI components.
+
 **Tailwind v4**
-- No `tailwind.config.js`; tokens in `@theme`; `@custom-variant dark` present if `dark:` utilities are used with a manual switcher.
+- No `tailwind.config.js`; `globals.css` is `@import "tailwindcss"` then `@import "@heroui/styles"`; no stray `@custom-variant dark` or hand-rolled `@theme` palette.
 - No v3-only syntax (`bg-opacity-*`, old `shadow`/`rounded` scale assumptions).
 - Dark mode covers every surface, text colour, border, and form control that was previously hard-coded (`bg-white`, `text-gray-700`, etc.).
 
@@ -42,6 +49,7 @@ Review the working tree diff if git is initialised (`git diff`, `git diff --cach
 - No unused files or dead CSS introduced (and flag `src/app/page.module.css` if still present).
 - Dependencies added are justified and not overlapping.
 - README explanations for the component library and the bug fix are present if those tasks were done.
+- `PROMPT_HISTORY.md` has an entry for the prompt that produced this change, with numbered steps.
 
 ## Output format
 
