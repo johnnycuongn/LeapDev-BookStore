@@ -1,35 +1,54 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "@gravity-ui/icons";
+import { Button } from "@heroui/react";
 import data from "../../public/data.json";
 import BookCard from "@/components/BookCard";
-import Modal from "@/components/Modal";
-import BookForm from "@/components/BookForm";
+import BookDialog from "@/components/BookDialog";
+import { BookFormValues } from "@/components/BookForm";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { Book } from "@/types/book";
+
+/** Covers in the first grid row are preloaded so the largest paint is not delayed. */
+const ABOVE_THE_FOLD_COUNT = 4;
 
 export default function Page() {
   const [books, setBooks] = useState<Book[]>(data as Book[]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | undefined>(undefined);
 
-  const handleAddBook = (newBook: Partial<Book>) => {
-    const book: Book = {
-      ...(newBook as Book),
-      id: Math.max(...books.map((b) => b.id), 0) + 1,
-    };
-    console.log("Adding book:", book);
-    setBooks([...books, book]);
-    setIsModalOpen(false);
+  const openAddDialog = () => {
+    setSelectedBook(undefined);
+    setIsDialogOpen(true);
   };
 
-  const handleUpdateBook = (updatedBook: Partial<Book>) => {
+  const openEditDialog = (book: Book) => {
+    setSelectedBook(book);
+    setIsDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedBook(undefined);
+  };
+
+  const handleAddBook = (values: BookFormValues) => {
+    const book: Book = {
+      ...values,
+      id: Math.max(...books.map((b) => b.id), 0) + 1,
+    };
+    setBooks([...books, book]);
+    closeDialog();
+  };
+
+  const handleUpdateBook = (values: BookFormValues) => {
     setBooks(
       books.map((book) =>
-        book.id === selectedBook?.id ? { ...book , ...updatedBook} : book
+        book.id === selectedBook?.id ? { ...book, ...values } : book
       )
     );
-    setIsModalOpen(false);
-    setSelectedBook(undefined);
+    closeDialog();
   };
 
   const handleDeleteBook = (id: number) => {
@@ -38,54 +57,48 @@ export default function Page() {
     }
   };
 
-  const handleEdit = (book: Book) => {
-    setSelectedBook(book);
-    setIsModalOpen(true);
-  };
-
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Book Gallery</h1>
-        <button
-          onClick={() => {
-            setSelectedBook(undefined);
-            setIsModalOpen(true);
-          }}
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-        >
-          Add New Book
-        </button>
-      </div>
+    <>
+      <header className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
+        <div className="container mx-auto flex items-center justify-between gap-4 px-4 py-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Book Gallery</h1>
+            <p className="text-sm text-muted">
+              {books.length} {books.length === 1 ? "book" : "books"} on the shelf
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onPress={openAddDialog}>
+              <Plus className="size-4" />
+              Add book
+            </Button>
+            <ThemeSwitcher />
+          </div>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {books.map((book) => (
-          <BookCard
-            key={book.id}
-            book={book}
-            onEdit={handleEdit}
-            onDelete={handleDeleteBook}
-          />
-        ))}
-      </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {books.map((book, index) => (
+            <BookCard
+              key={book.id}
+              book={book}
+              onEdit={openEditDialog}
+              onDelete={handleDeleteBook}
+              priority={index < ABOVE_THE_FOLD_COUNT}
+            />
+          ))}
+        </div>
+      </main>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedBook(undefined);
+      <BookDialog
+        isOpen={isDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
         }}
-        title={selectedBook ? "Edit Book" : "Add New Book"}
-      >
-        <BookForm
-          book={selectedBook}
-          onSubmit={selectedBook ? handleUpdateBook : handleAddBook}
-          onCancel={() => {
-            setIsModalOpen(false);
-            setSelectedBook(undefined);
-          }}
-        />
-      </Modal>
-    </main>
+        book={selectedBook}
+        onSubmit={selectedBook ? handleUpdateBook : handleAddBook}
+      />
+    </>
   );
 }
