@@ -1,47 +1,112 @@
+"use client";
+
 import Image from "next/image";
+import { Ellipsis, Pencil, StarFill, TrashBin } from "@gravity-ui/icons";
+import { Button, Card, Chip, Dropdown, Label } from "@heroui/react";
 import { Book } from "@/types/book";
+import { formatPrice } from "@/lib/currencies";
 
 interface BookCardProps {
   book: Book;
   onEdit: (book: Book) => void;
   onDelete: (id: number) => void;
+  /** Preload the cover; set for above-the-fold cards. */
+  priority?: boolean;
 }
 
-export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
+const MAX_VISIBLE_GENRES = 2;
+
+export default function BookCard({ book, onEdit, onDelete, priority = false }: BookCardProps) {
+  const visibleGenres = book.genres.slice(0, MAX_VISIBLE_GENRES);
+  const hiddenGenreCount = book.genres.length - visibleGenres.length;
+
   return (
-    <div className="relative bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="relative h-[300px] w-full">
+    <Card className="group h-full">
+      {/* Cover with the action menu overlaid in the top-right corner */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-default">
         <Image
           src={book.coverImage}
           alt={`Cover of ${book.title}`}
           fill
-          style={{ objectFit: "cover" }}
+          priority={priority}
+          sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-      </div>
-      <div className="p-4">
-        <h3 className="text-lg font-semibold">{book.title}</h3>
-        <p className="text-gray-600">{book.author}</p>
-        <p className="text-green-600 font-semibold mb-2">
-          {book.currency} {book.price.toFixed(2)}
-        </p>
-        <p className="text-gray-700 text-sm line-clamp-3 mb-4">
-          {book.description}
-        </p>
-        <div className="mt-4 flex gap-2">
-          <button
-            onClick={() => onEdit(book)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(book.id)}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            Delete
-          </button>
+
+        <div className="absolute end-2 top-2 z-10">
+          <Dropdown>
+            <Button
+              isIconOnly
+              aria-label={`Actions for ${book.title}`}
+              size="sm"
+              variant="secondary"
+              className="bg-surface/85 shadow-sm backdrop-blur"
+            >
+              <Ellipsis className="size-4" />
+            </Button>
+            <Dropdown.Popover placement="bottom end">
+              <Dropdown.Menu
+                aria-label={`${book.title} actions`}
+                onAction={(key) => {
+                  if (key === "edit") onEdit(book);
+                  if (key === "delete") onDelete(book.id);
+                }}
+              >
+                <Dropdown.Item id="edit" textValue="Edit">
+                  <Pencil className="size-4 shrink-0 text-muted" />
+                  <Label>Edit</Label>
+                </Dropdown.Item>
+                <Dropdown.Item id="delete" textValue="Delete" variant="danger">
+                  <TrashBin className="size-4 shrink-0 text-danger" />
+                  <Label>Delete</Label>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         </div>
+
+        <span
+          aria-label={`Rated ${book.rating} out of 5`}
+          className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-full bg-surface/85 px-2 py-0.5 text-xs font-medium text-foreground shadow-sm backdrop-blur"
+        >
+          <StarFill aria-hidden className="size-3 text-warning" />
+          {book.rating.toFixed(1)}
+        </span>
       </div>
-    </div>
+
+      <Card.Header className="gap-0.5">
+        <Card.Title className="line-clamp-1 text-base" title={book.title}>
+          {book.title}
+        </Card.Title>
+        <Card.Description className="line-clamp-1">{book.author}</Card.Description>
+      </Card.Header>
+
+      <Card.Content className="gap-3">
+        <p className="line-clamp-2 text-sm text-muted">{book.description}</p>
+        {book.genres.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {visibleGenres.map((genre) => (
+              <Chip key={genre} size="sm" variant="soft">
+                {genre}
+              </Chip>
+            ))}
+            {hiddenGenreCount > 0 && (
+              <Chip size="sm" variant="soft" aria-label={`${hiddenGenreCount} more genres`}>
+                +{hiddenGenreCount}
+              </Chip>
+            )}
+          </div>
+        )}
+      </Card.Content>
+
+      <Card.Footer className="justify-between">
+        <span className="text-base font-semibold text-foreground">
+          {formatPrice(book.price, book.currency)}
+        </span>
+        <span className={`text-xs ${book.stock > 0 ? "text-muted" : "text-danger"}`}>
+          {book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}
+        </span>
+      </Card.Footer>
+    </Card>
   );
 }
